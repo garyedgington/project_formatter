@@ -89,7 +89,20 @@ def format_data(
         "Use POST /v1/format for full access."
     ),
 )
-async def format_trial(raw_request: Request, request: FormatRequest) -> FormatResponse:
+async def format_trial(
+    raw_request: Request,
+    request: FormatRequest,
+    validate: bool = Query(default=False),
+) -> FormatResponse:
+    if validate:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "VALIDATE_NOT_SUPPORTED_ON_TRIAL",
+                "message": "?validate=true is not available on the trial endpoint. Use POST /v1/format for validation.",
+            },
+        )
+
     body = await raw_request.body()
     if len(body) > TRIAL_MAX_BYTES:
         raise HTTPException(

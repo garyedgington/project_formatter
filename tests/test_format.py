@@ -1,8 +1,6 @@
-"""Tests for the /v1/format endpoint.
+"""Tests for the /v1/format endpoint."""
 
-Phase 1: structure and payment/validation tests.
-Full conversion tests added in Phase 1 once formatter.py is implemented.
-"""
+import json
 
 from fastapi.testclient import TestClient
 
@@ -86,28 +84,72 @@ def test_trial_unsupported_pair_returns_400():
     assert response.status_code == 400
 
 
+def test_trial_validate_flag_returns_400():
+    """Trial endpoint must reject ?validate=true."""
+    response = client.post(
+        "/v1/format/trial?validate=true",
+        json={"from": "csv", "to": "json", "input": "name\nAlice"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "VALIDATE_NOT_SUPPORTED_ON_TRIAL"
+
+
 # ---------------------------------------------------------------------------
-# Phase 1 — conversion tests (uncomment as formatter.py is implemented)
+# Live conversion tests — require ANTHROPIC_API_KEY in environment
 # ---------------------------------------------------------------------------
 
-# def test_csv_to_json():
-#     response = client.post("/v1/format", json={
-#         "from": "csv", "to": "json",
-#         "input": "name,age\nAlice,30\nBob,25"
-#     })
-#     assert response.status_code == 200
-#     result = json.loads(response.json()["result"])
-#     assert result[0]["name"] == "Alice"
-#     assert result[1]["age"] == "25"
+def test_csv_to_json():
+    response = client.post("/v1/format", json={
+        "from": "csv", "to": "json",
+        "input": "name,age\nAlice,30\nBob,25",
+    })
+    assert response.status_code == 200
+    result = json.loads(response.json()["result"])
+    assert isinstance(result, list)
+    assert result[0]["name"] == "Alice"
+    assert result[1]["name"] == "Bob"
 
-# def test_xml_to_json():
-#     ...
 
-# def test_markdown_to_html():
-#     ...
+def test_xml_to_json():
+    response = client.post("/v1/format", json={
+        "from": "xml", "to": "json",
+        "input": "<items><item><name>Widget</name></item></items>",
+    })
+    assert response.status_code == 200
+    result = json.loads(response.json()["result"])
+    assert isinstance(result, dict)
 
-# def test_validate_flag_valid_output():
-#     ...
 
-# def test_validate_flag_invalid_output():
-#     ...
+def test_markdown_to_html():
+    response = client.post("/v1/format", json={
+        "from": "markdown", "to": "html",
+        "input": "# Hello\n\nThis is **bold**.",
+    })
+    assert response.status_code == 200
+    result = response.json()["result"]
+    assert "<h1>" in result
+    assert "<strong>" in result or "<b>" in result
+
+
+def test_validate_flag_valid_output():
+    """?validate=true on valid CSV should return valid=True with no errors."""
+    response = client.post("/v1/format?validate=true", json={
+        "from": "csv", "to": "json",
+        "input": "name,age\nAlice,30",
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert body["valid"] is True
+    assert body["errors"] is None
+
+
+def test_validate_flag_no_extra_fields_without_flag():
+    """Without ?validate, valid and errors must not appear in response."""
+    response = client.post("/v1/format", json={
+        "from": "csv", "to": "json",
+        "input": "name,age\nAlice,30",
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get("valid") is None
+    assert body.get("errors") is None

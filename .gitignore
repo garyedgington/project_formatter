@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+*.pyc
+
+# Scripts containing private keys — never commit
+test_payment.py
+swap_eth_for_usdc.py
+check_balance.py

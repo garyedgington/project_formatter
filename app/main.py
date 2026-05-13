@@ -26,6 +26,10 @@ app = FastAPI(
 if settings.log_requests:
     app.middleware("http")(request_logging_middleware)
 
+# Phase 4b: MCP channel (DualRail Rail 2 — fiat billing via MCP-Hive)
+from app.mcp_server import mcp as _mcp_server  # noqa: E402
+app.mount("/mcp", _mcp_server.sse_app())
+
 
 @app.api_route("/health", methods=["GET", "HEAD"], response_model=HealthResponse)
 def health() -> HealthResponse:

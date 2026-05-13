@@ -24,12 +24,9 @@ Environment variables (set in Railway):
   MCP_A2A_CAPABILITIES_URL      — defaults to A2A hub /v1/capabilities (must set live URL)
 """
 
-from __future__ import annotations
-
 import asyncio
 import json
 import os
-from typing import Any, Optional
 
 import httpx
 from mcp.server.fastmcp import FastMCP
@@ -140,8 +137,8 @@ async def format_data(
     )
 )
 async def validate_schema(
-    payload: dict[str, Any],
-    schema: dict[str, Any],
+    payload: dict,
+    schema: dict,
 ) -> str:
     """
     Validate a JSON payload against a JSON Schema.

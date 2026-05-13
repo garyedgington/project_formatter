@@ -36,6 +36,67 @@ def health() -> HealthResponse:
     return HealthResponse(status="ok", service="formatter-agent", version=APP_VERSION)
 
 
+@app.get("/.well-known/mcp/server-card.json", include_in_schema=False)
+def mcp_server_card():
+    from fastapi.responses import JSONResponse
+    return JSONResponse({
+        "name": "x402 Data Formatter",
+        "description": (
+            "Convert CSV, XML, or Markdown to JSON or HTML using Claude AI. "
+            "Optional structural validation. Part of the x402 micropayment task market."
+        ),
+        "version": APP_VERSION,
+        "tools": [
+            {
+                "name": "format_data",
+                "description": (
+                    "Convert structured data between formats using Claude AI. "
+                    "Supported pairs: csv->json, xml->json, markdown->html. "
+                    "Set validate=true to run a structural validation pass after conversion."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "input": {"type": "string", "description": "Raw content to convert (CSV rows, XML string, or Markdown text)."},
+                        "from_format": {"type": "string", "description": "Source format: csv, xml, or markdown."},
+                        "to_format": {"type": "string", "description": "Target format: json or html."},
+                        "validate": {"type": "boolean", "description": "If true, validate the converted output and return errors.", "default": False},
+                    },
+                    "required": ["input", "from_format", "to_format"],
+                },
+            },
+            {
+                "name": "validate_schema",
+                "description": (
+                    "Validate a JSON payload against a JSON Schema Draft 7 definition. "
+                    "Returns valid/invalid status with field-level error paths for each violation. "
+                    "No x402 payment required."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "payload": {"type": "string", "description": "The JSON object to validate, as a JSON-encoded string."},
+                        "schema": {"type": "string", "description": "The JSON Schema Draft 7 definition, as a JSON-encoded string."},
+                    },
+                    "required": ["payload", "schema"],
+                },
+            },
+            {
+                "name": "get_capabilities",
+                "description": (
+                    "Retrieve the full capability manifest for the x402 task market. "
+                    "Returns all available services with endpoint URLs, supported formats, "
+                    "x402 payment details, and free trial endpoints."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                },
+            },
+        ],
+    })
+
+
 @app.post("/v1/format", response_model=FormatResponse, dependencies=[Depends(enforce_payment)])
 def format_data(
     request: FormatRequest,

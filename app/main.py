@@ -26,9 +26,12 @@ app = FastAPI(
 if settings.log_requests:
     app.middleware("http")(request_logging_middleware)
 
-# Phase 4b: MCP channel (DualRail Rail 2 — fiat billing via MCP-Hive)
+# MCP channel (DualRail Rail 2 — fiat billing via MCP-Hive)
+# Mounted at root so FastMCP generates correct session URLs (/messages/?session_id=...)
+# SSE endpoint: /sse   Messages endpoint: /messages/
+# All explicit FastAPI routes above take priority over this catch-all mount.
 from app.mcp_server import mcp as _mcp_server  # noqa: E402
-app.mount("/mcp", _mcp_server.sse_app())
+app.mount("/", _mcp_server.sse_app())
 
 
 @app.api_route("/health", methods=["GET", "HEAD"], response_model=HealthResponse)
@@ -42,7 +45,7 @@ def mcp_server_card():
     return JSONResponse({
         "name": "x402 Data Formatter",
         "description": (
-            "Convert CSV, XML, or Markdown to JSON or HTML using Claude AI. "
+            "Convert CSV, XML, or Markdown to JSON or HTML using AI Agents. "
             "Optional structural validation. Part of the x402 micropayment task market."
         ),
         "version": APP_VERSION,
@@ -50,7 +53,7 @@ def mcp_server_card():
             {
                 "name": "format_data",
                 "description": (
-                    "Convert structured data between formats using Claude AI. "
+                    "Convert structured data between formats using AI Agents. "
                     "Supported pairs: csv->json, xml->json, markdown->html. "
                     "Pass validate=true to run a structural validation pass after conversion — "
                     "response will include valid (bool) and errors (list) alongside the result. "

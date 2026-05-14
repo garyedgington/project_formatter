@@ -50,7 +50,7 @@ def mcp_server_card():
                     "Pass validate=true to run a structural validation pass after conversion — "
                     "response will include valid (bool) and errors (list) alongside the result. "
                     "Input must be a raw string (no pre-parsed objects). "
-                    "Returns JSON string with result field, or error field on failure."
+                    "Returns result field on success, or error field on failure."
                 ),
                 "inputSchema": {
                     "type": "object",
@@ -61,6 +61,26 @@ def mcp_server_card():
                         "validate": {"type": "boolean", "description": "If true, validate the converted output and return errors.", "default": False},
                     },
                     "required": ["input", "from_format", "to_format"],
+                },
+                "outputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "result": {"type": ["string", "null"], "description": "The converted output string (JSON or HTML), or null on failure."},
+                        "valid": {"type": ["boolean", "null"], "description": "Whether the converted output passed structural validation. Only present when validate=true."},
+                        "errors": {
+                            "type": ["array", "null"],
+                            "items": {"type": "string"},
+                            "description": "List of validation error messages. Only present when validate=true.",
+                        },
+                        "error": {"type": ["string", "null"], "description": "Error message if conversion failed, otherwise null."},
+                    },
+                    "required": ["result", "error"],
+                },
+                "annotations": {
+                    "readOnlyHint": True,
+                    "destructiveHint": False,
+                    "idempotentHint": True,
+                    "openWorldHint": False,
                 },
             },
         ],

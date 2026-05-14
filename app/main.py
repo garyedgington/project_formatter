@@ -52,7 +52,10 @@ def mcp_server_card():
                 "description": (
                     "Convert structured data between formats using Claude AI. "
                     "Supported pairs: csv->json, xml->json, markdown->html. "
-                    "Set validate=true to run a structural validation pass after conversion."
+                    "Pass validate=true to run a structural validation pass after conversion — "
+                    "response will include valid (bool) and errors (list) alongside the result. "
+                    "Input must be a raw string (no pre-parsed objects). "
+                    "Returns JSON string with result field, or error field on failure."
                 ),
                 "inputSchema": {
                     "type": "object",

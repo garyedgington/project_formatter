@@ -58,8 +58,8 @@ def mcp_server_card():
                     "type": "object",
                     "properties": {
                         "input": {"type": "string", "description": "Raw content to convert (CSV rows, XML string, or Markdown text)."},
-                        "from_format": {"type": "string", "description": "Source format: csv, xml, or markdown."},
-                        "to_format": {"type": "string", "description": "Target format: json or html."},
+                        "from_format": {"type": "string", "enum": ["csv", "xml", "markdown"], "description": "Source format. Valid pairs: csv->json, xml->json, markdown->html."},
+                        "to_format": {"type": "string", "enum": ["json", "html"], "description": "Target format. Valid pairs: csv->json, xml->json, markdown->html."},
                         "validate": {"type": "boolean", "description": "If true, validate the converted output and return errors.", "default": False},
                     },
                     "required": ["input", "from_format", "to_format"],

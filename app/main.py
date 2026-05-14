@@ -26,14 +26,6 @@ app = FastAPI(
 if settings.log_requests:
     app.middleware("http")(request_logging_middleware)
 
-# MCP channel (DualRail Rail 2 — fiat billing via MCP-Hive)
-# Mounted at root so FastMCP generates correct session URLs (/messages/?session_id=...)
-# SSE endpoint: /sse   Messages endpoint: /messages/
-# All explicit FastAPI routes above take priority over this catch-all mount.
-from app.mcp_server import mcp as _mcp_server  # noqa: E402
-app.mount("/", _mcp_server.sse_app())
-
-
 @app.api_route("/health", methods=["GET", "HEAD"], response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok", service="formatter-agent", version=APP_VERSION)
@@ -177,3 +169,10 @@ async def format_trial(
         ) from exc
 
     return FormatResponse(result=result)
+
+
+# MCP channel (DualRail Rail 2 — fiat billing via MCP-Hive)
+# Mounted at root AFTER all explicit routes so FastAPI routes take priority.
+# SSE endpoint: /sse   Messages endpoint: /messages/
+from app.mcp_server import mcp as _mcp_server  # noqa: E402
+app.mount("/", _mcp_server.sse_app())
